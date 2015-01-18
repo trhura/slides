@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Thinking Functionally with Clojure</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <style type="text/css">
+
+      <!--
+	  @import url(http://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(http://fonts.googleapis.com/css?family=Montserrat:700);
+	  @import url(http://fonts.googleapis.com/css?family=Lato:400,900);
+	        @import url(http://fonts.googleapis.com/css?family=Oswald);
+		@import url(http://fonts.googleapis.com/css?family=Cabin+Sketch);
+	  @import url(http://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+	  @import url(http://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+	  @import url(http://fonts.googleapis.com/css?family=Raleway);
+	-->
+
+      .remark-slide-content {
+      	font-family: 'Lato';
+	font-size: 22px;
+      	line-height: 35px;
+      }
+
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+
+      .remark-code {
+	font-size: 15px;
+	line-height: 30px;
+      }
+
+      .tbx {
+	background: #000;
+	color: #fff;
+	padding: 30px;
+	border: 1px solid black;
+	background-color:rgba(0,0,0,0.2);
+      }
+
+      .ttx {
+       font-weight: bold;
+       color: #333;
+      }
+
+      .margin-top-twenty {
+      	margin-top: 20%;
+      }
+
+      .red { color: red; }
+      .green { color: green; }
+      .blue { color: aqua; }
+      .yellow { color: yellow; }
+      .gold { color: gold; }
+      .magenta { color: magenta; }
+      .orchid { color: orchid; }
+
+    </style>
+  </head>
+  <body>
+        <textarea id="source">
+class: center, middle
+
+# Thinking Functionally in Clojure
+---
+
+class: middle, center
+
+# About me
+---
+# Agenda
+
++ Functional Programming
++ Clojure
++ Demo
+ + Factorial
+ + Primality Test
+ + Dot Product
+ + Rot13
++ Wrap-up
+
+---
+
+class: middle, center
+
+#Functional Programming
+---
+
+#Clojure
+.center.tbx[.ttx[
+Clojure is a .red[dynamic], .blue[general-purpose], .gold[compiled] programming language that targets the Java Virtual Machine (and the CLR, and JavaScript) for multithreaded programming. Clojure provides easy access to the .magenta[Java] frameworks, with optional type hints and type inference, to ensure that calls to Java can avoid reflection.
+
+Clojure is a dialect of .green[Lisp], and shares with Lisp the .red[code-as-data] philosophy and a powerful macro system. Clojure is predominantly a .blue[functional] programming language, and features a rich set of .gold[immutable, persistent] data structures.
+]]
+---
+
+# Demo – Factorial
+
+.center.tbx.margin-top-twenty[.ttx[
+The factorial of a non-negative integer n, denoted by n!, is the product of all positive integers less than or equal to n.
+]]
+
+.center[![Factorial](img/factorial.png)]
+
+---
+
+# Demo – Factorial
+
++ Range
+
+```lisp
+user> (doc range)
+-------------------------
+clojure.core/range
+([] [end] [start end] [start end step])
+  Returns a lazy seq of nums from start (inclusive) to end
+  (exclusive), by step, where start defaults to 0, step to 1, and end to
+  infinity.
+
+user> (range 10)
+(0 1 2 3 4 5 6 7 8 9)
+
+user> (range 1 10)
+(1 2 3 4 5 6 7 8 9)
+
+```
+---
+
+# Demo – Factorial
+
+* Folding (http://en.wikipedia.org/wiki/Foldl)
+
+``` lisp
+user> (doc reduce)
+-------------------------
+clojure.core/reduce
+([f coll] [f val coll])
+  f should be a function of 2 arguments. If val is not supplied,
+  returns the result of applying f to the first 2 items in coll, then
+  applying f to that result and the 3rd item, etc.
+
+user> (reduce + [1 2 3 4 5]) ;; (((1 + 2) + 3) + 4) + 5
+15
+
+user> (reduce + (range 10000))
+49995000
+```
+---
+
+# Demo – Factorial
+
++ Clojure Implementation
+
+```clojure
+user> (defn factorial [num]
+        (reduce * (range 1 (inc num))))
+#'user/factorial
+```
+
++ Java Implementation
+
+```Java
+class Summer {
+    public static long factorial(int num) {
+	        int factorial = 1;
+			for (int i = 1; i <= n; i++) {
+				factorial *= i;
+			}
+			return factorial;
+	}
+}
+```
+
+---
+
+# Demo – Primality Test
+
+.center.tbx.margin-top-twenty[.ttx[
+Write a program which checks whether a number is a prime number, a natural number with no positive divisors other than 1.
+]]
+---
+
+# Demo – Primality Test
+
++ Division/Remainder
+
+```lisp
+user> (rem 4 3)
+1
+
+user> (= (rem 4 3) 0)
+false
+
+user> (zero? (rem 4 3))
+false
+
+user> (defn divisible [num div]
+        (zero? (rem num div))))
+```
+---
+
+# Demo – Primality Test
+
++ Anonymous/Lambda Functions
+
+```lisp
+user> (defn divisible-by-two [num] (divisible num 2))
+#'user/divisible-by-two
+
+user> (divisible-by-two 5)
+false
+
+user> (#(divisible % 2) 5)
+false
+
+user> (#(divisible % 3) 6)
+true
+
+user> ((partial + 2) 5) ;; currying
+7
+user> ((partial + 3) 5)
+8
+```
+---
+
+# Demo – Primality Test
+
+* Filter
+
+```lisp
+user> (doc filter)
+-------------------------
+clojure.core/filter
+([pred coll])
+  Returns a lazy sequence of the items in coll for which
+  (pred item) returns true. pred must be free of side-effects.
+
+user> (filter #(divisible % 2) (range 20))
+(0 2 4 6 8 10 12 14 16 18)
+
+user> (filter even? (range 20)) ;; get even numbers
+(0 2 4 6 8 10 12 14 16 18)
+
+user> (filter #(> % 0) [8 -3 4 2 -1 -9 -12 7]) ;; filter negative numbers
+(8 4 2 7)
+```
+
+---
+
+# Demo – Primality Test
+
+* Clojure implementation
+
+```lisp
+
+user> (defn is-prime? [num] ;; assuming num > 1
+		(not-any? #(divisible num %) (range 2 num)))
+```
+
+* Java Implementation
+
+```Java
+public static boolean isPrime(int n) {
+    for (int x = 2; x < n; x++) {
+        if (n % x == 0) {
+            return false;
+        }
+    }
+    return true;
+}
+```
+
+---
+
+# Demo – Dot Product
+.center.tbx[.ttx[
+ Dot Product is an algebraic operation that takes two equal-length sequences of numbers (usually coordinate vectors) and returns a single number.
+]]
+
+.center[![Factorial](img/dot_product.png)]
+.center[![Factorial](img/dot_product2.gif)]
+---
+
+#Demo – Dot Product
+
++ Mapping
+
+```clojure
+user> (range 0 100 5)
+(0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95)
+
+user> (map inc (range 0 100 5))
+(1 6 11 16 21 26 31 36 41 46 51 56 61 66 71 76 81 86 91 96)
+
+user> (map (partial + 3) (range 0 100 5))
+(3 8 13 18 23 28 33 38 43 48 53 58 63 68 73 78 83 88 93 98)
+
+user> (map + (range 5) (reverse (range 5))) ;; (map + [0 1 2 3 4] [4 3 2 1 0])
+(4 4 4 4 4)
+```
+---
+
+# Demo – Dot Product
+
+* Clojure Implementation
+
+```clojure
+user> (defn dot-product [lst1 lst2]
+        (reduce + (map * lst1 lst2)))
+```
+
+* Java Implementation
+
+```Java
+public static double dotProd(double[] a, double[] b){
+	double sum = 0;
+	for(int i = 0; i < a.length; i++){
+		sum += a[i] * b[i];
+	}
+	return sum;
+}
+```
+
+---
+
+# Demo – Rot13
+
+* Java Implementation [Here](http://introcs.cs.princeton.edu/java/31datatype/Rot13.java.html)
+
+```java
+    public static void Rot13(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if       (c >= 'a' && c <= 'm') c += 13;
+            else if  (c >= 'A' && c <= 'M') c += 13;
+            else if  (c >= 'n' && c <= 'z') c -= 13;
+            else if  (c >= 'N' && c <= 'Z') c -= 13;
+            System.out.print(c);
+        }
+        System.out.println();
+    }
+```
+---
+
+# Demo – ROT13
+
+* Clojure Implementation
+
+```clojure
+(def *alphabets* "abcdefghijklmnopqrstuvwxyz")
+
+(defn update-case [c1 c2]
+	(if (Character/isUpperCase c1)
+	  (-> c2 str .toUpperCase)
+	  (str c2)))
+
+(defn rotate-char [c n]
+	(update-case c (nth (cycle *alphabets*)
+						(+ n (.indexOf *alphabets*
+								(-> c str .toLowerCase))))))
+
+(defn rot13 [string]
+	(apply str (map #(rotate-char % 13) string)))
+```
+---
+# Demo – ROT13 Memoization
+
++ Cache of the mapping from arguments to results.
+
+```clojure
+user> (nil? (time (doall (rot13 (take 100000 (cycle *alphabets*))))))
+"Elapsed time: 2403.519348 msecs"
+
+user> (defn rotate-char-memoized [c n]
+		(memoize rotate-char))
+#'user/rotate-char-memoized
+
+user> (defn rot13-memoized [string]
+			(apply str (map #(rotate-char-memoized % 13) string)))
+
+user> (nil? (time (doall (rot13-memoized (take 100000 (cycle *alphabets*))))))
+"Elapsed time: 155.821301 msecs"
+```
+---
+class: center, middle
+
+# Wrapup
+
+</textarea>
+    <script src="http://gnab.github.io/remark/downloads/remark-latest.min.js">
+    </script>
+
+    <script type="text/javascript">
+      var slideshow = remark.create();
+    </script>
+
+  </body>
+</html>
